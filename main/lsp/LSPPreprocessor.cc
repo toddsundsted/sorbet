@@ -109,6 +109,7 @@ void LSPPreprocessor::mergeFileChanges(absl::Mutex &mtx, QueueState &state) {
                     // slow path a second time when the current slow path finishes.
                     if ((combinedUpdates.canTakeFastPath || !params->updates.canTakeFastPath) &&
                         gs.tryCancelSlowPath(params->updates.versionEnd)) {
+                        sorbet::instantAdd("cancelTypechecking", chrono::steady_clock::now(), {});
                         if (combinedUpdates.canTakeFastPath) {
                             logger->debug(
                                 "[Preprocessor] Canceling typechecking, as edits {} thru {} can take fast path.",
