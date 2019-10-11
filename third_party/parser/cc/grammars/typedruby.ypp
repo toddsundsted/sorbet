@@ -178,6 +178,7 @@ using namespace std::string_literals;
   tANDDOT             1142
   tRATIONAL_IMAGINARY 1143
   tFLOAT_IMAGINARY    1144
+  tBELL               1145
 
 %type <node>
   arg
@@ -2073,7 +2074,7 @@ opt_block_args_tail:
                     {
                       $$ = driver.build.index(self, $1, $2, $3, $4);
                     }
-                | primary_value call_op
+                | primary_value tBELL
                     {
                       std::string last_token = "syntax error";
 

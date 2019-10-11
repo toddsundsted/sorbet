@@ -256,6 +256,7 @@ static const lexer::token_table_entry PUNCTUATION[] = {
   { "`", token_type::tBACK_REF2 },
   { "!@", token_type::tBANG },
   { "&.", token_type::tANDDOT },
+  { "\a", token_type::tBELL },
   { NULL, token_type::error },
 };
 
@@ -708,7 +709,7 @@ void lexer::set_state_expr_value() {
 
   # A list of all punctuation except punctuation_begin.
   punctuation_end     = ','  | '='  | '->' | '('  | '['  | ']'   |
-                        '::' | '?'  | ':'  | '.'  | '..' | '...' ;
+                        '::' | '?'  | ':'  | '.'  | '..' | '...' | '\a' ;
 
   # A list of keywords which have different meaning at the beginning of expression.
   keyword_modifier    = 'if'     | 'unless' | 'while'  | 'until' | 'rescue' ;
@@ -2436,7 +2437,7 @@ void lexer::set_state_expr_value() {
       # METHOD CALLS
       #
 
-      '.' | '&.' | '::'
+      '.' | '&.' | '::' | '\a'
       => { emit_table(PUNCTUATION);
            fnext expr_dot; fbreak; };
 
@@ -2489,6 +2490,10 @@ void lexer::set_state_expr_value() {
       '?'
       => { emit(token_type::tEH, "?");
            fnext expr_value; fbreak; };
+
+      # '\a'
+      # => { emit(token_type::tBELL);
+      #      fnext expr_dot; fbreak; };
 
       e_lbrack
       => { emit(token_type::tLBRACK2, "[");

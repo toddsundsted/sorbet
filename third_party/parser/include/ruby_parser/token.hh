@@ -154,6 +154,7 @@
   XX(tANDDOT,              1142) \
   XX(tRATIONAL_IMAGINARY,  1143) \
   XX(tFLOAT_IMAGINARY,     1144) \
+  XX(tBELL,                1145) \
 
 namespace ruby_parser {
   enum class token_type : int {
