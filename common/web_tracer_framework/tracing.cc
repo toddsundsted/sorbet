@@ -52,7 +52,9 @@ bool Tracing::storeTraces(const CounterState &counters, string_view fileName) {
         string maybeArgs;
         if (!e.args.empty()) {
             maybeArgs = fmt::format(",\"args\":{{{}}}", fmt::map_join(e.args, ",", [](const auto &nameValue) -> string {
-                                        return fmt::format("\"{}\":\"{}\"", nameValue.first, nameValue.second);
+                                        return fmt::format(
+                                            "\"{}\":\"{}\"", nameValue.first,
+                                            absl::StrReplaceAll(nameValue.second, {{"\"", "\\\""}, {"\\", "\\\\"}}));
                                     }));
         }
 
