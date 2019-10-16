@@ -66,11 +66,22 @@ bool Tracing::storeTraces(const CounterState &counters, string_view fileName) {
             maybeFlow = fmt::format(",\"bind_id\":{},\"flow_in\":true", e.prev.id);
         }
 
-        fmt::format_to(result,
-                       "{{\"name\":\"{}\",\"ph\":\"X\",\"ts\":{:.3f},\"dur\":{:.3f},\"pid\":{},\"tid\":{}{}{}}},\n",
-                       e.measure, (std::chrono::duration<double, std::micro>(e.start.time_since_epoch())).count(),
-                       (std::chrono::duration<double, std::micro>(e.end - e.start)).count(), pid, e.threadId, maybeArgs,
-                       maybeFlow);
+        switch (e.eventKind) {
+            case Counters::EventKind::Complete:
+                fmt::format_to(
+                    result,
+                    "{{\"name\":\"{}\",\"ph\":\"X\",\"ts\":{:.3f},\"dur\":{:.3f},\"pid\":{},\"tid\":{}{}{}}},\n",
+                    e.measure, (std::chrono::duration<double, std::micro>(e.start.time_since_epoch())).count(),
+                    (std::chrono::duration<double, std::micro>(e.end - e.start)).count(), pid, e.threadId, maybeArgs,
+                    maybeFlow);
+                break;
+            case Counters::EventKind::Instant:
+                fmt::format_to(
+                    result, "{{\"name\":\"{}\",\"ph\":\"i\",\"s\":\"g\",\"ts\":{:.3f},\"pid\":{},\"tid\":{}{}{}}},\n",
+                    e.measure, (std::chrono::duration<double, std::micro>(e.start.time_since_epoch())).count(), pid,
+                    e.threadId, maybeArgs, maybeFlow);
+                break;
+        }
     }
 
     fmt::format_to(result, "\n");

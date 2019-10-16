@@ -196,8 +196,17 @@ void timingAdd(ConstExprStr measure, std::chrono::time_point<std::chrono::steady
         "format doesn't support chaining"); // see "case 1" in
                                             // https://docs.google.com/document/d/1La_0PPfsTqHJihazYhff96thhjPtvq1KjAUOJu0dvEg/edit?pli=1#
                                             // for workaround
-    CounterImpl::Timing tim{0,    measure.str, start, end, getThreadId(), givenArgs2StoredArgs(move(args)),
-                            self, previous};
+    CounterImpl::Timing tim{0,       measure.str,   Counters::EventKind::Complete,    start,
+                            end,     getThreadId(), givenArgs2StoredArgs(move(args)), self,
+                            previous};
+    counterState.timingAdd(tim);
+}
+
+void instantAdd(ConstExprStr measure, std::chrono::time_point<std::chrono::steady_clock> start,
+                std::vector<std::pair<ConstExprStr, std::string>> args) {
+    CounterImpl::Timing tim{0,  measure.str,   Counters::EventKind::Instant,     start,
+                            {}, getThreadId(), givenArgs2StoredArgs(move(args)), {0},
+                            {0}};
     counterState.timingAdd(tim);
 }
 
@@ -345,6 +354,10 @@ string getCounterStatistics(vector<string> names) {
         vector<pair<string, string>> sortedTimings;
         UnorderedMap<string, vector<double>> timings;
         for (const auto &e : counterState.timings) {
+            if (e.eventKind != Counters::EventKind::Complete) {
+                // TODO(jez) Also print instants
+                continue;
+            }
             std::chrono::duration<double, std::milli> durationMs = e.end - e.start;
             timings[e.measure].emplace_back(durationMs.count());
         }

@@ -64,6 +64,10 @@ private:
 
 struct Counters {
     static const std::vector<std::string> ALL_COUNTERS;
+    enum class EventKind {
+        Complete,
+        Instant,
+    };
 };
 
 CounterState getAndClearThreadCounters();
@@ -90,6 +94,9 @@ struct FlowId {
 void timingAdd(ConstExprStr measure, std::chrono::time_point<std::chrono::steady_clock> start,
                std::chrono::time_point<std::chrono::steady_clock> end,
                std::vector<std::pair<ConstExprStr, std::string>> args, FlowId self, FlowId previous);
+
+void instantAdd(ConstExprStr measure, std::chrono::time_point<std::chrono::steady_clock> start,
+                std::vector<std::pair<ConstExprStr, std::string>> args);
 
 UnorderedMap<long, long> getAndClearHistogram(ConstExprStr histogram);
 std::string getCounterStatistics(std::vector<std::string> names);

@@ -91,6 +91,10 @@ bool StatsD::submitCounters(const CounterState &counters, string_view host, int 
 
     UnorderedMap<int, CounterImpl::Timing> flowStarts;
     for (const auto &e : counters.counters->timings) {
+        if (e.eventKind != Counters::EventKind::Complete) {
+            // TODO(jez) Also handle instants
+            continue;
+        }
         statsd.timing(e);
     }
 
