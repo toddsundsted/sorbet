@@ -172,6 +172,7 @@ LSPLoop::TypecheckRun LSPLoop::runSlowPath(unique_ptr<core::GlobalState> previou
         // Index the updated files using finalGS.
         {
             core::UnfreezeFileTable fileTableAccess(*finalGS);
+            Timer timeit(logger, "slow_path.index_new_files");
             for (auto &file : updates.updatedFiles) {
                 auto pair = updateFile(move(finalGS), file, config.opts);
                 finalGS = move(pair.first);
@@ -184,11 +185,14 @@ LSPLoop::TypecheckRun LSPLoop::runSlowPath(unique_ptr<core::GlobalState> previou
             }
         }
 
-        // Copy the indexes of unchanged files.
-        for (const auto &tree : indexed) {
-            // Note: indexed entries for payload files don't have any contents.
-            if (tree.tree && !updatedFiles.contains(tree.file.id())) {
-                indexedCopies.emplace_back(ast::ParsedFile{tree.tree->deepCopy(), tree.file});
+        {
+            Timer timeit(logger, "slow_path.copy_unchanged_indexes");
+            // Copy the indexes of unchanged files.
+            for (const auto &tree : indexed) {
+                // Note: indexed entries for payload files don't have any contents.
+                if (tree.tree && !updatedFiles.contains(tree.file.id())) {
+                    indexedCopies.emplace_back(ast::ParsedFile{tree.tree->deepCopy(), tree.file});
+                }
             }
         }
         if (finalGS->wasTypecheckingCanceled()) {
