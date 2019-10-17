@@ -193,10 +193,10 @@ LSPLoop::TypecheckRun LSPLoop::runSlowPath(unique_ptr<core::GlobalState> previou
                 if (tree.tree && !updatedFiles.contains(tree.file.id())) {
                     indexedCopies.emplace_back(ast::ParsedFile{tree.tree->deepCopy(), tree.file});
                 }
+                if (finalGS->wasTypecheckingCanceled()) {
+                    return;
+                }
             }
-        }
-        if (finalGS->wasTypecheckingCanceled()) {
-            return;
         }
 
         ENFORCE(finalGS->lspQuery.isEmpty());
