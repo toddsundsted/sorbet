@@ -1565,6 +1565,10 @@ void lexer::set_state_expr_value() {
       => { emit(token_type::tCONSTANT);
            fnext *arg_or_cmdarg(); fbreak; };
 
+      'end'
+      => { emit(token_type::kEND);
+           fnext expr_end; fbreak; };
+
       call_or_var
       => { emit(token_type::tIDENTIFIER);
            fnext *arg_or_cmdarg(); fbreak; };
