@@ -1560,10 +1560,75 @@ void lexer::set_state_expr_value() {
   #
   # Transitions to `expr_arg` afterwards.
   #
+  # KEEP IN SYNC WITH expr_dot_after_newline!
+  #
   expr_dot := |*
       constant
       => { emit(token_type::tCONSTANT);
            fnext *arg_or_cmdarg(); fbreak; };
+
+      call_or_var
+      => { emit(token_type::tIDENTIFIER);
+           fnext *arg_or_cmdarg(); fbreak; };
+
+      bareword ambiguous_fid_suffix
+      => { emit(token_type::tFID, tok(ts, tm), ts, tm);
+           fnext *arg_or_cmdarg(); p = tm - 1; fbreak; };
+
+      # See the comment in `expr_fname`.
+      operator_fname      |
+      operator_arithmetic |
+      operator_rest
+      => { emit_table(PUNCTUATION);
+           fnext expr_arg; fbreak; };
+
+      # This differs from Ruby. See comment for expr_dot_after_newline below.
+      w_newline
+      => { fhold; fgoto expr_dot_after_newline; };
+
+      w_any;
+
+      c_any
+      => { fhold; fgoto expr_end; };
+
+      c_eof => do_eof;
+  *|;
+
+  # KEEP IN SYNC WITH expr_dot!
+  #
+  # This state breaks from valid Ruby syntax, but in a way that enables Sorbet
+  # to recover better from parse errors. Recovering from parse errors is
+  # important because it lets us service LSP queries faster.
+  #
+  # Specifically, this state makes is so that 'end' seen after w_newline is
+  # emitted as kEND instead of tIDENTIFIER. Some examples:
+  #
+  #   # Parse error in Ruby and Sorbet, but Sorbet at least sees the method def
+  #   # (Ruby would see empty node list)
+  #   def foo
+  #     x.
+  #   end
+  #
+  #   # Valid Ruby, valid in Sorbet (no newline between '.' and 'end')
+  #   def foo
+  #     x.end
+  #   end
+  #
+  #   # Valid Ruby, not valid in Sorbet (newline between '.' and 'end')
+  #   def foo
+  #     x.
+  #       end
+  #   end
+  #
+  expr_dot_after_newline := |*
+      constant
+      => { emit(token_type::tCONSTANT);
+           fnext *arg_or_cmdarg(); fbreak; };
+
+      # This is different from expr_dot. Here, end is a keyword.
+      keyword
+      => { emit_table(KEYWORDS);
+           fnext expr_end; fbreak; };
 
       call_or_var
       => { emit(token_type::tIDENTIFIER);
